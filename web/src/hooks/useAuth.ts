@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { signInWithTelegram } from '../lib/auth';
 import { fetchUserProfile } from '../lib/api';
-import { getTelegramUser, ready } from '../lib/telegram';
+import { getInitData, ready } from '../lib/telegram';
 import { pushToast } from '../components/Toast';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -50,10 +50,12 @@ export function useAuth(): AuthState {
         return;
       }
 
-      // Try Telegram sign-in
-      const tg = getTelegramUser();
-      if (!tg) {
-        // Running outside Telegram — surface no session, no auth attempt
+      // Try Telegram sign-in. The reliable signal that we're inside Telegram is
+      // the signed initData string — even if initDataUnsafe.user is missing on
+      // some platforms, initData is set whenever the WebApp launched from a bot.
+      const initData = getInitData();
+      if (!initData) {
+        // No signed data — running outside Telegram WebApp. Surface no session.
         setState({ ...initial, loading: false, outsideTelegram: true });
         return;
       }

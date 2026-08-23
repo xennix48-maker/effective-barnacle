@@ -2,9 +2,9 @@ import { supabase } from './supabase';
 import { getInitData, getStartParam } from './telegram';
 
 export type AuthResult = {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
+  ok: boolean;
+  token_hash: string;
+  email: string;
   user: {
     id: string;
     telegram_id: number;
@@ -20,8 +20,7 @@ export type AuthResult = {
  *  - validates the HMAC-SHA256 signature
  *  - upserts the user keyed on telegram_id
  *  - parses ?startapp=ref_<tgid> for referral attribution
- *  - mints a Supabase session
- * Returns the session tokens, which we then load via setSession().
+ *  - returns a token_hash + email — we then verifyOtp to establish a Supabase session.
  */
 export async function signInWithTelegram(): Promise<AuthResult> {
   const initData = getInitData();
@@ -36,14 +35,17 @@ export async function signInWithTelegram(): Promise<AuthResult> {
   });
 
   if (error) throw error;
-  if (!data) throw new Error('No response from tg-auth');
+  if (!data || !data.ok || !data.token_hash || !data.email) {
+    throw new Error('No response from tg-auth');
+  }
 
-  const { access_token, refresh_token } = data;
-  const { error: setErr } = await supabase.auth.setSession({
-    access_token,
-    refresh_token,
+  // Exchange the hashed_token for a Supabase session.
+  const { error: verifyErr } = await supabase.auth.verifyOtp({
+    email: data.email,
+    token: data.token_hash,
+    type: 'magiclink',
   });
-  if (setErr) throw setErr;
+  if (verifyErr) throw verifyErr;
 
   return data;
 }
