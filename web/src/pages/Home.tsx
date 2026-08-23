@@ -10,10 +10,20 @@ export function Home() {
   const { user, isAdmin, telegramId } = useAuth();
   const { settings } = useSettings();
   const [machines, setMachines] = useState<MachineLevel[]>([]);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+  const [catalogLoaded, setCatalogLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    void fetchMachineCatalog().then(setMachines);
+    fetchMachineCatalog()
+      .then((rows) => setMachines(rows))
+      .catch((err) => {
+        // Surface the failure instead of letting the UI sit on skeletons forever.
+        // eslint-disable-next-line no-console
+        console.error('[home] fetchMachineCatalog failed', err);
+        setCatalogError(err?.message ?? 'failed to load');
+      })
+      .finally(() => setCatalogLoaded(true));
   }, []);
 
   const botUsername =
@@ -99,11 +109,35 @@ export function Home() {
           <span className="home-section__sub">{machines.length} မျိုး</span>
         </div>
         <div className="home-machines">
-          {machines.length === 0
-            ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="skeleton" style={{ height: 240 }} />
-              ))
-            : machines.map((m) => <MachineCard key={m.level} machine={m} />)}
+          {catalogError ? (
+            <div className="card card--warn">
+              <div className="fw-700">စက်များ ရယူမရပါ</div>
+              <div className="text-dim text-sm mt-4">{catalogError}</div>
+              <button
+                className="btn btn--ghost mt-12"
+                onClick={() => {
+                  setCatalogError(null);
+                  setCatalogLoaded(false);
+                  fetchMachineCatalog()
+                    .then(setMachines)
+                    .catch((err) => setCatalogError(err?.message ?? 'failed'))
+                    .finally(() => setCatalogLoaded(true));
+                }}
+              >
+                ထပ်ကြိုးစားမည်
+              </button>
+            </div>
+          ) : machines.length === 0 && !catalogLoaded ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="skeleton" style={{ height: 240 }} />
+            ))
+          ) : machines.length === 0 ? (
+            <div className="card">
+              <div className="text-dim">စက်များ မရှိသေးပါ</div>
+            </div>
+          ) : (
+            machines.map((m) => <MachineCard key={m.level} machine={m} />)
+          )}
         </div>
       </section>
     </div>
