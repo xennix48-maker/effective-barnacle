@@ -3,7 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { pushToast } from '../../components/Toast';
 
-const DEFAULT_EMAIL = 'tg_8915316853@btcak.local';
+// Default email is left blank so admins must type their own — the bootstrap
+// flow creates a `<telegram_id>@btcak.local` row per admin in Supabase.
+const DEFAULT_EMAIL = '';
 
 export function Login() {
   const navigate = useNavigate();
