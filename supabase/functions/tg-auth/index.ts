@@ -5,7 +5,7 @@
 // for referral attribution, then mints a Supabase session using the admin API
 // and returns { access_token, refresh_token, expires_in, user }.
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.112.3';
 import { handleCors, jsonResponse, errorResponse } from '../_shared/cors.ts';
 
 const BOT_TOKEN = Deno.env.get('BOT_TOKEN') ?? '';
@@ -14,7 +14,20 @@ const ADMIN_TG_IDS = (Deno.env.get('ADMIN_TG_IDS') ?? '')
   .map((s) => s.trim())
   .filter(Boolean);
 
-async function hmacSha256(key: string, msg: string): Promise<string> {
+async function hmacSha256Hex(keyBytes: Uint8Array, msg: string): Promise<string> {
+  const enc = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyBytes,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(msg));
+  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacSha256Bytes(key: string, msg: string): Promise<Uint8Array> {
   const enc = new TextEncoder();
   const cryptoKey = await crypto.subtle.importKey(
     'raw',
@@ -24,7 +37,7 @@ async function hmacSha256(key: string, msg: string): Promise<string> {
     ['sign']
   );
   const sig = await crypto.subtle.sign('HMAC', cryptoKey, enc.encode(msg));
-  return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return new Uint8Array(sig);
 }
 
 function constantTimeEqual(a: string, b: string): boolean {
@@ -65,9 +78,11 @@ async function validateInitData(
   if (!BOT_TOKEN) return { ok: false, reason: 'BOT_TOKEN not configured' };
   const { pairs, hash, authDate, user, startParam } = parseInitData(initData);
   if (!hash) return { ok: false, reason: 'missing hash' };
-  const secretKey = await hmacSha256('WebAppData', BOT_TOKEN);
+  // Telegram's spec: secret_key = HMAC-SHA256(BOT_TOKEN, "WebAppData") as raw bytes,
+  // then hash = HMAC-SHA256(secret_key, data_check_string) as hex.
+  const secretKey = await hmacSha256Bytes(BOT_TOKEN, 'WebAppData');
   const dataCheckString = buildDataCheckString(pairs);
-  const expected = await hmacSha256(secretKey, dataCheckString);
+  const expected = await hmacSha256Hex(secretKey, dataCheckString);
   if (!constantTimeEqual(expected, hash)) return { ok: false, reason: 'invalid hash' };
   if (authDate && Date.now() / 1000 - authDate > 3600) {
     return { ok: false, reason: 'auth_date too old' };
@@ -116,16 +131,19 @@ Deno.serve(async (req) => {
       photo_url: tgUser.photo_url ?? null,
     },
   });
+  const createErrText = [createErr?.message, createErr?.error_description, createErr?.msg]
+    .filter(Boolean)
+    .join(' ');
   if (createdUser?.user?.id) {
     authUserId = createdUser.user.id;
-  } else if (createErr && /already registered/i.test(createErr.message ?? '')) {
+  } else if (createErr && /already.*(?:registered|exists)|email_exists|user_exists/i.test(createErrText)) {
     // Already exists — look it up.
     const { data: list, error: listErr } = await adminClient.auth.admin.listUsers();
     if (listErr) return errorResponse(`auth listUsers failed: ${listErr.message}`, 500);
     const existing = list.users.find((u: any) => u.email === syntheticEmail);
     if (existing) authUserId = existing.id;
   } else if (createErr) {
-    return errorResponse(`createUser failed: ${createErr.message}`, 500);
+    return errorResponse(`createUser failed: ${createErrText || JSON.stringify(createErr)}`, 500);
   }
   if (!authUserId) return errorResponse('Failed to provision auth user', 500);
 
@@ -172,12 +190,37 @@ Deno.serve(async (req) => {
     }
   }
 
-  // 4. Mint a session directly via admin API.
-  const { data: session, error: sessErr } = await adminClient.auth.admin.createSession({
-    user_id: authUserId,
+  // 4. Mint a session for the user via magiclink generate → verify exchange.
+//    supabase-js doesn't expose admin.createSession — GoTrue's admin API has no
+//    "create session" endpoint either. The supported path is:
+//      a) admin.generateLink({ type: 'magiclink', email }) → { properties: { action_link, hashed_token } }
+//      b) POST /auth/v1/verify with { token_hash, type: 'magiclink' } → { access_token, refresh_token, expires_in }
+  const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
+    type: 'magiclink',
+    email: syntheticEmail,
   });
-  if (sessErr || !session) {
-    return errorResponse(`session mint failed: ${sessErr?.message ?? 'unknown'}`, 500);
+  if (linkErr || !linkData?.properties?.hashed_token) {
+    return errorResponse(
+      `generateLink failed: ${linkErr?.message ?? 'no hashed_token'}`, 500
+    );
+  }
+  const verifyResp = await fetch(`${SUPABASE_URL}/auth/v1/verify`, {
+    method: 'POST',
+    headers: {
+      'apikey': Deno.env.get('SUPABASE_ANON_KEY') ?? SERVICE_ROLE,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      token_hash: linkData.properties.hashed_token,
+      type: 'magiclink',
+    }),
+  });
+  const session: any = await verifyResp.json().catch(() => ({}));
+  if (!verifyResp.ok || !session?.access_token) {
+    return errorResponse(
+      `verify failed: ${verifyResp.status} ${JSON.stringify(session).slice(0, 300)}`,
+      500
+    );
   }
 
   return jsonResponse({

@@ -46,6 +46,19 @@ export function Refer() {
     );
   }
 
+  // Build the fallback message once, outside JSX, so the nested-ternary + Burmese
+  // string never has to round-trip through the JSX parser.
+  let referFallbackMessage: string;
+  if (outsideTelegram) {
+    referFallbackMessage = insideTelegram
+      ? 'Telegram WebApp data is missing. Please reopen this app from the bot menu button — opening the link from a chat message does not start a Mini App session.'
+      : 'ဒီ page ကို Telegram app ထဲမှာ ဖွင့်ရပါမည်။ Bot menu button မှ ဝင်ပါ — Telegram account ဖြင့် sign-in လုပ်မှ ကိုယ့်ဖိတ် link ရပါမည်။';
+  } else if (authError) {
+    referFallbackMessage = `Auth failed: ${authError}. Reload to retry — your telegram_id is required to build the invite link.`;
+  } else {
+    referFallbackMessage = 'Loading your account...';
+  }
+
   return (
     <div className="app-shell">
       <div className="page-header">
@@ -92,23 +105,15 @@ export function Refer() {
       ) : (
         <div className="card" style={{ borderColor: 'rgba(247, 147, 26, 0.3)', background: 'rgba(247, 147, 26, 0.08)' }}>
           <div className="fw-700" style={{ marginBottom: 6 }}>⚠️ Refer link unavailable</div>
-          <div className="text-dim text-sm">
-            {outsideTelegram
-              ? insideTelegram
-                ? 'Telegram WebApp data is missing. Please reopen this app from the bot menu button — opening the link from a chat message does not start a Mini App session.'
-                : 'Telegram WebApp data not detected. Open this app from inside Telegram to get your personal invite link.'
-              : authError
-                ? `Auth failed: ${authError}. Reload to retry — your telegram_id is required to build the invite link.`
-                : 'Loading your account...'}
-          </div>
-          {outsideTelegram && insideTelegram ? (
-            <a
-              className="btn btn--primary btn--block mt-12"
-              href={`https://t.me/${botUsername}`}
-            >
-              🤖 Bot menu သို့ သွားမည်
-            </a>
-          ) : null}
+          <div className="text-dim text-sm">{referFallbackMessage}</div>
+          <a
+            className="btn btn--primary btn--block mt-12"
+            href={`https://t.me/${botUsername}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            🤖 Bot သို့ သွားမည် → Telegram တွင် ဖွင့်ပါ
+          </a>
         </div>
       )}
 

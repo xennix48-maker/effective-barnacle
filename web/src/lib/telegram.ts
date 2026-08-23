@@ -28,16 +28,33 @@ export function getStartParam(): string | undefined {
 }
 
 /**
- * Reliable "are we running inside Telegram at all" signal. Telegram's web-app
- * script populates `WebApp.platform` (e.g. 'ios', 'android', 'tdesktop', 'web')
- * even when initData is missing — that happens when the URL is opened via a
- * plain chat link rather than a `web_app` button. Use this to distinguish
- * "open in Telegram" from "in Telegram, but please reopen via bot menu".
+ * Reliable "are we running inside Telegram at all" signal.
+ *
+ * Telegram's web-app polyfill defaults `WebApp.platform` to `'unknown'` and
+ * leaves `initData` empty when the URL fragment has no `tgWebApp*` params —
+ * which is exactly what happens when a user opens the deployed URL in a
+ * regular mobile browser. So `platform !== 'unknown'` alone is not enough.
+ *
+ * A real Telegram WebView populates at least one of these from the URL hash
+ * even when the user opens via a plain menu button (no `start_param`):
+ *   - WebApp.platform          → 'ios' | 'android' | 'macos' | 'tdesktop' | 'web' | 'weba'
+ *   - WebApp.initDataUnsafe.user (present whenever tgWebAppData was injected)
+ *   - WebApp.colorScheme       → 'light' | 'dark' (polyfill defaults to 'light')
+ *   - WebApp.themeParams       → non-empty object (polyfill defaults to {})
+ *
+ * If any of those look "real" (not the polyfill default), we're in Telegram.
  */
 export function isInsideTelegram(): boolean {
   try {
-    const platform = (WebApp as any).platform as string | undefined;
-    return Boolean(platform) && platform !== 'unknown';
+    const wa = WebApp as any;
+    const platform = wa.platform as string | undefined;
+    if (platform && platform !== 'unknown') return true;
+    if (wa.initDataUnsafe?.user?.id) return true;
+    if (typeof wa.colorScheme === 'string' && wa.colorScheme !== 'light') return true;
+    if (wa.themeParams && typeof wa.themeParams === 'object' && Object.keys(wa.themeParams).length > 0) {
+      return true;
+    }
+    return false;
   } catch {
     return false;
   }
