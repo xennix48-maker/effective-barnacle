@@ -1,0 +1,56 @@
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './hooks/useAuth';
+import { Home } from './pages/Home';
+import { Buy } from './pages/Buy';
+import { MyMachines } from './pages/MyMachines';
+import { Drop } from './pages/Drop';
+import { Refer } from './pages/Refer';
+import { NotAuthorized } from './pages/NotAuthorized';
+import { AdminLayout } from './pages/admin/AdminLayout';
+import { Dashboard } from './pages/admin/Dashboard';
+import { Purchases } from './pages/admin/Purchases';
+import { Drops } from './pages/admin/Drops';
+import { Settings as AdminSettings } from './pages/admin/Settings';
+import { Users } from './pages/admin/Users';
+import { ToastHost } from './components/Toast';
+
+export function AppRoutes() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="app-loading__spinner" />
+        <p>�ဏစောင့်ပါ...</p>
+      </div>
+    );
+  }
+
+  // Outside Telegram + no session: show NotAuthorized (the auth hook already returned without user).
+  const inTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
+
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/buy/:level" element={<Buy />} />
+        <Route path="/machines" element={<MyMachines />} />
+        <Route path="/drop" element={<Drop />} />
+        <Route path="/refer" element={<Refer />} />
+        <Route path="/not-authorized" element={<NotAuthorized />} />
+
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="purchases" element={<Purchases />} />
+          <Route path="drops" element={<Drops />} />
+          <Route path="users" element={<Users />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <ToastHost />
+      {!inTelegram ? null : null}
+    </HashRouter>
+  );
+}

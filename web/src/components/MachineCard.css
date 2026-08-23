@@ -1,0 +1,74 @@
+.machine-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #141a26;
+  border: 1px solid #1f2737;
+  color: #e8eaf0;
+  text-decoration: none;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+
+.machine-card:hover {
+  transform: translateY(-2px);
+  border-color: #f7931a;
+}
+
+.machine-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.machine-card__level {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f7931a;
+}
+
+.machine-card__name {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.machine-card__row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.machine-card__row--small {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.machine-card__label {
+  opacity: 0.7;
+}
+
+.machine-card__price {
+  font-weight: 700;
+}
+
+.machine-card__earn {
+  font-weight: 700;
+  color: #4ade80;
+}
+
+.machine-card__rate {
+  font-variant-numeric: tabular-nums;
+}
+
+.machine-card__cta {
+  margin-top: 8px;
+  padding: 10px 0;
+  text-align: center;
+  background: #f7931a;
+  color: #0b0f17;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 14px;
+}

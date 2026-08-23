@@ -4,3 +4,43 @@
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Env
+.env
+.env.local
+.env.*.local
+web/.env.local
+web/.env.*.local
+supabase/.env
+supabase/.env.local
+
+# Build outputs
+web/dist/
+web/build/
+node_modules/
+**/node_modules/
+
+# Supabase
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+
+# Vercel
+.vercel/
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test
+coverage/
+.nyc_output/

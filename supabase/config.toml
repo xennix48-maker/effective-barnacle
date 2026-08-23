@@ -1,0 +1,45 @@
+# Supabase local + remote project configuration.
+# Run `supabase link --project-ref <ref>` and `supabase db push` to deploy migrations.
+
+project_id = "btcak"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[studio]
+enabled = true
+port = 54323
+
+[auth]
+enabled = true
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://localhost:5173"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = false          # Telegram-only auth; no public signup.
+
+[auth.hook.custom_access_token]
+uri = "pg-functions://postgres/public/custom_access_token_hook"
+
+[edge_runtime]
+enabled = true
+policy = "oneshot"
+inspector_port = 8083
+
+[functions.tg-auth]
+verify_jwt = false             # called anonymously with initData; validates HMAC itself.
+
+[functions.admin-approve-purchase]
+verify_jwt = true
+
+[functions.admin-approve-drop]
+verify_jwt = true
