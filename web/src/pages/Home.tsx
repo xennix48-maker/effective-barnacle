@@ -17,7 +17,7 @@ export function Home() {
   }, []);
 
   const botUsername =
-    (import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MININGMACHINE_BOT';
+    (import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MINING_OFFICAL';
   const refLink = telegramId
     ? `https://t.me/${botUsername}?startapp=ref_${telegramId}`
     : '';
@@ -59,7 +59,7 @@ export function Home() {
             </Link>
           ) : (
             <a
-              href="https://telegram.org"
+              href={`https://t.me/${(import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MINING_OFFICAL'}`}
               target="_blank"
               rel="noreferrer"
               className="home-quick__btn"
@@ -104,31 +104,6 @@ export function Home() {
                 <div key={i} className="skeleton" style={{ height: 240 }} />
               ))
             : machines.map((m) => <MachineCard key={m.level} machine={m} />)}
-        </div>
-      </section>
-
-      {/* Trust strip */}
-      <section className="trust-strip">
-        <div className="trust-strip__item">
-          <div className="trust-strip__icon">🔒</div>
-          <div>
-            <div className="trust-strip__title">လုံခြုံစိတ်ချရ</div>
-            <div className="trust-strip__sub">Supabase Auth</div>
-          </div>
-        </div>
-        <div className="trust-strip__item">
-          <div className="trust-strip__icon">⚡</div>
-          <div>
-            <div className="trust-strip__title">Per-Second</div>
-            <div className="trust-strip__sub">Real-time accrual</div>
-          </div>
-        </div>
-        <div className="trust-strip__item">
-          <div className="trust-strip__icon">🤝</div>
-          <div>
-            <div className="trust-strip__title">24/7 ရနိုင်</div>
-            <div className="trust-strip__sub">Vercel Hosted</div>
-          </div>
         </div>
       </section>
     </div>

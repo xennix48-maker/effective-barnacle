@@ -16,7 +16,7 @@ export function Refer() {
   } | null>(null);
 
   const botUsername =
-    (import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MININGMACHINE_BOT';
+    (import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MINING_OFFICAL';
   const refLink = telegramId
     ? `https://t.me/${botUsername}?startapp=ref_${telegramId}`
     : '';

@@ -649,33 +649,9 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%;
 }
 
-/* ====== Trust strip ====== */
+/* ====== Trust strip (removed; rules retained for backwards compat) ====== */
 
-.trust-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  padding: 14px;
-  border-radius: var(--radius-lg);
-  background: var(--bg-1);
-  border: 1px solid var(--border);
-}
-.trust-strip__item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.trust-strip__icon {
-  width: 32px; height: 32px;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  display: grid; place-items: center;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-.trust-strip__title { font-size: 12px; font-weight: 700; }
-.trust-strip__sub   { font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+.trust-strip { display: none; }
 
 /* ====== Page header back btn (other pages) ====== */
 
