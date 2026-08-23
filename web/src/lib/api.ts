@@ -250,6 +250,84 @@ export async function fetchPendingDrops(): Promise<Transaction[]> {
   return (data ?? []) as Transaction[];
 }
 
+/**
+ * Fetch transactions for the admin history view.
+ * If filter.status is provided, restrict to that status ('pending' | 'approved' | 'rejected').
+ * If filter.kind is provided, restrict to that kind ('purchase' | 'drop' | 'referral_bonus').
+ * If filter.user_id is provided, restrict to a single user.
+ */
+export async function fetchTransactionsAdmin(
+  filter: { status?: 'pending' | 'approved' | 'rejected'; kind?: 'purchase' | 'drop' | 'referral_bonus'; user_id?: string; limit?: number } = {}
+): Promise<Transaction[]> {
+  let q = supabase
+    .from('transactions')
+    .select(
+      'id,kind,amount_mmk,status,payment_method,phone,account_name,last6,note,reject_reason,created_at,decided_at,user_id,related_machine'
+    )
+    .order('created_at', { ascending: false })
+    .limit(filter.limit ?? 200);
+  if (filter.status) q = q.eq('status', filter.status);
+  if (filter.kind) q = q.eq('kind', filter.kind);
+  if (filter.user_id) q = q.eq('user_id', filter.user_id);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []) as Transaction[];
+}
+
+export type UserDetail = {
+  user: {
+    id: string;
+    telegram_id: number | null;
+    first_name: string | null;
+    username: string | null;
+    photo_url: string | null;
+    is_admin: boolean;
+    referrer_id: string | null;
+    created_at: string;
+  };
+  machines: UserMachine[];
+  referrals_made: number;
+  paid_referrals_made: number;
+};
+
+export async function fetchUserDetail(userId: string): Promise<UserDetail | null> {
+  const { data: user, error: uErr } = await supabase
+    .from('users')
+    .select('id,telegram_id,first_name,username,photo_url,is_admin,referrer_id,created_at')
+    .eq('id', userId)
+    .maybeSingle();
+  if (uErr) throw uErr;
+  if (!user) return null;
+
+  const [machinesRes, refsRes, paidRefsRes, balanceRes] = await Promise.all([
+    supabase
+      .from('user_machines')
+      .select('id,level,status,start_time,reject_reason,requested_at,price_paid_mmk')
+      .eq('user_id', userId)
+      .order('requested_at', { ascending: false }),
+    supabase.from('referrals').select('id', { count: 'exact', head: true }).eq('referrer_id', userId),
+    supabase.from('referrals').select('id', { count: 'exact', head: true }).eq('referrer_id', userId).eq('paid', true),
+    supabase.from('v_user_balance_snapshot').select('base_balance,rate_per_sec_total').eq('user_id', userId).maybeSingle(),
+  ]);
+
+  return {
+    user: user as UserDetail['user'],
+    machines: (machinesRes.data ?? []) as UserMachine[],
+    referrals_made: refsRes.count ?? 0,
+    paid_referrals_made: paidRefsRes.count ?? 0,
+    live_balance: balanceRes.data
+      ? Number(balanceRes.data.base_balance)
+      : 0,
+    live_rate: balanceRes.data ? Number(balanceRes.data.rate_per_sec_total) : 0,
+  } as UserDetail & { live_balance: number; live_rate: number };
+}
+
+export async function setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
+  // Direct UPDATE — only works if the calling user is already admin (RLS gates the row).
+  const { error } = await supabase.from('users').update({ is_admin: isAdmin }).eq('id', userId);
+  if (error) throw error;
+}
+
 export async function approvePurchase(transactionId: string, approve: boolean, reason?: string) {
   const { data, error } = await supabase.functions.invoke('admin-approve-purchase', {
     body: { transaction_id: transactionId, approve, reason },

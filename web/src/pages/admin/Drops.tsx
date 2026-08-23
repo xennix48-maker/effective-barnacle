@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { approveDrop, fetchPendingDrops, type Transaction } from '../../lib/api';
 import { pushToast } from '../../components/Toast';
+import { RejectModal } from '../../components/RejectModal';
 import { formatDate, formatMMK, formatMMKShort } from '../../lib/format';
+import { hapticImpact } from '../../lib/telegram';
 
 type Row = Transaction & {
   user_first_name?: string;
@@ -14,6 +16,7 @@ export function Drops() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectFor, setRejectFor] = useState<Transaction | null>(null);
 
   async function load() {
     setLoading(true);
@@ -54,6 +57,7 @@ export function Drops() {
   useEffect(() => { void load(); }, []);
 
   async function onApprove(id: string) {
+    hapticImpact('light');
     setBusyId(id);
     try {
       await approveDrop(id, true);
@@ -66,17 +70,14 @@ export function Drops() {
     }
   }
 
-  async function onReject(id: string) {
-    const reason = window.prompt('ငြင်းပယ်ရသည့် အကြောင်းအရင်း:');
-    if (reason == null) return;
-    if (!reason.trim()) {
-      pushToast('အကြောင်းအရင်း ထည့်ပါ', 'error');
-      return;
-    }
+  async function onConfirmReject(reason: string) {
+    if (!rejectFor) return;
+    const id = rejectFor.id;
     setBusyId(id);
     try {
-      await approveDrop(id, false, reason.trim());
+      await approveDrop(id, false, reason);
       pushToast('Reject လုပ်ပြီးပါပြီ', 'info');
+      setRejectFor(null);
       await load();
     } catch (e: any) {
       pushToast(`မအောင်မြင်ပါ: ${e?.message ?? 'unknown'}`, 'error');
@@ -174,7 +175,7 @@ export function Drops() {
                 <button
                   className="btn btn--danger"
                   disabled={busyId === r.id}
-                  onClick={() => onReject(r.id)}
+                  onClick={() => setRejectFor(r)}
                 >
                   ✕ Reject
                 </button>
@@ -183,6 +184,14 @@ export function Drops() {
           );
         })}
       </div>
+
+      <RejectModal
+        open={!!rejectFor}
+        title="Drop ငြင်းပယ်ရသည့် အကြောင်းအရင်း"
+        onCancel={() => setRejectFor(null)}
+        onConfirm={onConfirmReject}
+        busy={!!busyId}
+      />
     </section>
   );
 }

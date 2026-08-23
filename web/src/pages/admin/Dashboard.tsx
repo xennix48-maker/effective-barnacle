@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
+import { formatDate, formatMMKShort } from '../../lib/format';
 
 type Stats = {
   total_users: number;
@@ -9,6 +10,15 @@ type Stats = {
   approved_today: number;
   paid_referrals: number;
   total_refer_bonus: number;
+  total_purchase_volume: number;
+  total_drop_paid_volume: number;
+  recent_decisions: Array<{
+    id: string;
+    kind: 'purchase' | 'drop';
+    status: 'approved' | 'rejected';
+    amount_mmk: number;
+    decided_at: string;
+  }>;
 };
 
 export function Dashboard() {
@@ -20,7 +30,7 @@ export function Dashboard() {
 
   async function load() {
     const today = new Date(new Date().setUTCHours(0, 0, 0, 0)).toISOString();
-    const [users, activeMachines, pendPurchases, pendDrops, approvedToday, paidRefs, bonuses] =
+    const [users, activeMachines, pendPurchases, pendDrops, approvedToday, paidRefs, bonuses, purchaseVol, dropVol, recentDecisions] =
       await Promise.all([
         supabase.from('users').select('id', { count: 'exact', head: true }),
         supabase.from('user_machines').select('id', { count: 'exact', head: true }).eq('status', 'active'),
@@ -29,9 +39,27 @@ export function Dashboard() {
         supabase.from('transactions').select('id', { count: 'exact', head: true }).gte('decided_at', today).eq('status', 'approved'),
         supabase.from('referrals').select('id', { count: 'exact', head: true }).eq('paid', true),
         supabase.from('transactions').select('amount_mmk').eq('kind', 'referral_bonus').eq('status', 'approved'),
+        supabase.from('transactions').select('amount_mmk').eq('kind', 'purchase').eq('status', 'approved'),
+        supabase.from('transactions').select('amount_mmk').eq('kind', 'drop').eq('status', 'approved'),
+        supabase
+          .from('transactions')
+          .select('id,kind,status,amount_mmk,decided_at')
+          .in('kind', ['purchase', 'drop'])
+          .in('status', ['approved', 'rejected'])
+          .not('decided_at', 'is', null)
+          .order('decided_at', { ascending: false })
+          .limit(8),
       ]);
 
     const totalBonus = (bonuses.data ?? []).reduce(
+      (s, r: any) => s + Number(r.amount_mmk),
+      0
+    );
+    const totalPurchaseVol = (purchaseVol.data ?? []).reduce(
+      (s, r: any) => s + Number(r.amount_mmk),
+      0
+    );
+    const totalDropVol = (dropVol.data ?? []).reduce(
       (s, r: any) => s + Number(r.amount_mmk),
       0
     );
@@ -44,6 +72,9 @@ export function Dashboard() {
       approved_today: approvedToday.count ?? 0,
       paid_referrals: paidRefs.count ?? 0,
       total_refer_bonus: totalBonus,
+      total_purchase_volume: totalPurchaseVol,
+      total_drop_paid_volume: totalDropVol,
+      recent_decisions: (recentDecisions.data ?? []) as Stats['recent_decisions'],
     });
   }
 
@@ -116,6 +147,47 @@ export function Dashboard() {
         </div>
       </div>
 
+      {/* Volume stats */}
+      <div className="admin-grid">
+        <div className="admin-stat admin-stat--green">
+          <div className="admin-stat__label">💰 ဝယ်ယူ Volume</div>
+          <div className="admin-stat__value text-sm">{formatMMKShort(stats.total_purchase_volume)}</div>
+          <div className="admin-stat__sub">approved purchases cumulative</div>
+        </div>
+        <div className="admin-stat admin-stat--amber">
+          <div className="admin-stat__label">💸 Drops Paid</div>
+          <div className="admin-stat__value text-sm">{formatMMKShort(stats.total_drop_paid_volume)}</div>
+          <div className="admin-stat__sub">approved withdrawals cumulative</div>
+        </div>
+      </div>
+
+      {/* Recent decisions */}
+      {stats.recent_decisions.length > 0 ? (
+        <div>
+          <h3 className="home-section__title mt-8">🕒 Recent Activity</h3>
+          <div className="admin-list mt-12">
+            {stats.recent_decisions.map((d) => (
+              <div key={d.id} className="admin-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 18 }}>
+                  {d.kind === 'purchase' ? '🛒' : '💸'}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="admin-row__title text-sm">
+                    {d.kind === 'purchase' ? 'Purchase' : 'Drop'} · {formatMMKShort(Number(d.amount_mmk))} MMK
+                  </div>
+                  <div className="text-dim text-sm">{formatDate(d.decided_at)}</div>
+                </div>
+                <span
+                  className={`badge ${d.status === 'approved' ? 'badge--green' : 'badge--red'}`}
+                >
+                  {d.status === 'approved' ? '✓' : '✕'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {/* Quick action cards */}
       <div>
         <h3 className="home-section__title mt-8">⚡ Quick Actions</h3>
@@ -175,6 +247,26 @@ export function Dashboard() {
                 <div>
                   <div className="admin-row__title">Settings</div>
                   <div className="text-dim text-sm">Drop toggle · Machine catalog · Payment numbers</div>
+                </div>
+              </div>
+              <span style={{ fontSize: 18, opacity: 0.5 }}>→</span>
+            </div>
+          </a>
+          <a href="#/admin/transactions" className="admin-row">
+            <div className="row row--between">
+              <div className="row">
+                <div
+                  style={{
+                    width: 40, height: 40, borderRadius: 12,
+                    background: 'var(--bg-3)', color: 'var(--text)',
+                    display: 'grid', placeItems: 'center', fontSize: 20,
+                  }}
+                >
+                  📜
+                </div>
+                <div>
+                  <div className="admin-row__title">Transaction History</div>
+                  <div className="text-dim text-sm">အတည်ပြု / ငြင်းပယ် မှတ်တမ်း</div>
                 </div>
               </div>
               <span style={{ fontSize: 18, opacity: 0.5 }}>→</span>

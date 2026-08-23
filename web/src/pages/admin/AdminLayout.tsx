@@ -5,6 +5,7 @@ const ADMIN_TABS = [
   { to: '/admin', label: 'Dashboard', icon: '📊', end: true },
   { to: '/admin/purchases', label: 'Purchases', icon: '🛒' },
   { to: '/admin/drops', label: 'Drops', icon: '💸' },
+  { to: '/admin/transactions', label: 'History', icon: '📜' },
   { to: '/admin/users', label: 'Users', icon: '👥' },
   { to: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];

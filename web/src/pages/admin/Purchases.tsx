@@ -6,7 +6,9 @@ import {
   type Transaction,
 } from '../../lib/api';
 import { pushToast } from '../../components/Toast';
+import { RejectModal } from '../../components/RejectModal';
 import { formatDate, formatMMKShort } from '../../lib/format';
+import { hapticImpact } from '../../lib/telegram';
 
 type Row = Transaction & {
   user_first_name?: string;
@@ -19,6 +21,7 @@ export function Purchases() {
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [rejectFor, setRejectFor] = useState<Transaction | null>(null);
 
   async function load() {
     setLoading(true);
@@ -63,6 +66,7 @@ export function Purchases() {
   useEffect(() => { void load(); }, []);
 
   async function onApprove(id: string) {
+    hapticImpact('light');
     setBusyId(id);
     try {
       await approvePurchase(id, true);
@@ -75,17 +79,14 @@ export function Purchases() {
     }
   }
 
-  async function onReject(id: string) {
-    const reason = window.prompt('ငြင်းပယ်ရသည့် အကြောင်းအရင်း:');
-    if (reason == null) return;
-    if (!reason.trim()) {
-      pushToast('အကြောင်းအရင်း ထည့်ပါ', 'error');
-      return;
-    }
+  async function onConfirmReject(reason: string) {
+    if (!rejectFor) return;
+    const id = rejectFor.id;
     setBusyId(id);
     try {
-      await approvePurchase(id, false, reason.trim());
+      await approvePurchase(id, false, reason);
       pushToast('Reject လုပ်ပြီးပါပြီ', 'info');
+      setRejectFor(null);
       await load();
     } catch (e: any) {
       pushToast(`မအောင်မြင်ပါ: ${e?.message ?? 'unknown'}`, 'error');
@@ -180,7 +181,7 @@ export function Purchases() {
               <button
                 className="btn btn--danger"
                 disabled={busyId === r.id}
-                onClick={() => onReject(r.id)}
+                onClick={() => setRejectFor(r)}
               >
                 ✕ Reject
               </button>
@@ -188,6 +189,13 @@ export function Purchases() {
           </article>
         ))}
       </div>
+
+      <RejectModal
+        open={!!rejectFor}
+        onCancel={() => setRejectFor(null)}
+        onConfirm={onConfirmReject}
+        busy={!!busyId}
+      />
     </section>
   );
 }

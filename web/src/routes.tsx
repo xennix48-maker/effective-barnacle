@@ -12,6 +12,8 @@ import { Purchases } from './pages/admin/Purchases';
 import { Drops } from './pages/admin/Drops';
 import { Settings as AdminSettings } from './pages/admin/Settings';
 import { Users } from './pages/admin/Users';
+import { Transactions } from './pages/admin/Transactions';
+import { UserDetailPage } from './pages/admin/UserDetail';
 import { ToastHost } from './components/Toast';
 import { BottomNav } from './components/BottomNav';
 
@@ -42,7 +44,9 @@ export function AppRoutes() {
           <Route index element={<Dashboard />} />
           <Route path="purchases" element={<Purchases />} />
           <Route path="drops" element={<Drops />} />
+          <Route path="transactions" element={<Transactions />} />
           <Route path="users" element={<Users />} />
+          <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 

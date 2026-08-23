@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { formatDate } from '../../lib/format';
 
@@ -12,6 +13,7 @@ type UserRow = {
 };
 
 export function Users() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserRow[]>([]);
   const [q, setQ] = useState('');
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,12 @@ export function Users() {
         {filtered.map((u) => {
           const initials = (u.first_name ?? u.username ?? '?').charAt(0).toUpperCase();
           return (
-            <article key={u.id} className="admin-row" style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <article
+              key={u.id}
+              className="admin-row"
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+              onClick={() => navigate(`/admin/users/${u.id}`)}
+            >
               <div
                 style={{
                   width: 40, height: 40, borderRadius: '50%',
