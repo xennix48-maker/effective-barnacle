@@ -1,6 +1,6 @@
 // tg-auth edge function.
 //
-// Validates Telegram WebApp initData via HMAC-SHA256 with the bot token,
+// Validates Telegram WebApp initData via HMAC-SHA256 (deployed v19) with the bot token,
 // upserts the public.users row keyed on telegram_id, parses ?startapp=ref_<id>
 // for referral attribution, then mints a Supabase session using the admin API
 // and returns { access_token, refresh_token, expires_in, user }.
