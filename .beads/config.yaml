@@ -68,3 +68,5 @@
 sync.remote: "git+https://github.com/xennix48-maker/Btcak.git"
 dolt:
     shared-server: true
+export:
+    auto: true
