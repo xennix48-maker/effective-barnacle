@@ -46,6 +46,9 @@ export function AppRoutes() {
           <Route path="settings" element={<AdminSettings />} />
         </Route>
 
+        {/* Hidden admin entry — same panel, different URL */}
+        <Route path="/admin67" element={<Navigate to="/admin" replace />} />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastHost />

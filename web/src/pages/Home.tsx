@@ -40,7 +40,7 @@ export function Home() {
         <div className="home-hero__brand">
           <div className="home-hero__logo">₿</div>
           <div>
-            <h1 className="home-hero__title">Btcak</h1>
+            <h1 className="home-hero__title">BITCOIN MINING</h1>
             <p className="home-hero__sub">Bitcoin Mining · Myanmar Kyat</p>
           </div>
         </div>

@@ -39,7 +39,7 @@ export function Refer() {
     hapticImpact('medium');
     shareUrl(
       refLink,
-      '🎁 Btcak — Bitcoin Mining ကနေ ကျွန်တော်တို့ အတူတူ ရင်းနှီးကျွမ်းဝင်မယ်\n' +
+      '🎁 BITCOIN MINING ကနေ ကျွန်တော်တို့ အတူတူ ရင်းနှီးကျွမ်းဝင်မယ်\n' +
         '⛏️ 5 မျိုးသော Mining Machine ရွေးချယ်ဝယ်ယူနိုင်ပြီး\n' +
         '💸 ဖိတ်လိုက်တိုင်း 5,000 MMK (ကန့်သတ်မရှိ)\n' +
         '👇 ဒီ link နှိပ်ပြီး အကောင့်ဖွင့်လိုက်ပါ — ငါ့ကို ဆုကြေး ရပါမယ်'

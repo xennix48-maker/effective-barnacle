@@ -48,12 +48,13 @@ export function Buy() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!user) return;
-    if (!/^\d{6}$/.test(last6)) {
-      pushToast('နောက်ဆုံး ၆ လုံးကို မှန်ကန်စွာ ထည့်ပါ', 'error');
-      return;
-    }
     if (!phone.trim()) {
       pushToast('ဖုန်းနံပါတ် ထည့်ပါ', 'error');
+      return;
+    }
+    // last6 is optional — admin can match by phone or note if user omits it.
+    if (last6.trim() && !/^\d{6}$/.test(last6.trim())) {
+      pushToast('နောက်ဆုံး ၆ လုံးကို မှန်ကန်စွာ ထည့်ပါ', 'error');
       return;
     }
     setSubmitting(true);
@@ -175,7 +176,9 @@ export function Buy() {
         </div>
 
         <div className="field">
-          <label className="field__label">လွှဲငွေ Transaction နောက်ဆုံး ၆ လုံး</label>
+          <label className="field__label">
+            လွှဲငွေ Transaction နောက်ဆုံး ၆ လုံး <span className="text-mute text-sm">(optional)</span>
+          </label>
           <input
             className="input input--mono"
             value={last6}
@@ -186,12 +189,12 @@ export function Buy() {
         </div>
 
         <div className="field">
-          <label className="field__label">မှတ်ချက် (ရည်ညွှန်း/ပုံ URL ရွေးချယ်၍ဖြစ်ဖြစ်)</label>
+          <label className="field__label">မှတ်ချက် (optional)</label>
           <textarea
             className="textarea"
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Screenshot link, account name, etc."
+            placeholder="လွှဲငွေ reference အမှတ် စသည်"
             rows={2}
           />
         </div>

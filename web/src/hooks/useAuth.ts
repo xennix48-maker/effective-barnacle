@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { signInWithTelegram } from '../lib/auth';
+import { fetchUserProfile } from '../lib/api';
 import { getTelegramUser, ready } from '../lib/telegram';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -65,11 +66,37 @@ export function useAuth(): AuthState {
 
     function applySession(session: Session) {
       const claims = (session.user?.app_metadata ?? {}) as Record<string, unknown>;
-      const isAdmin = Boolean(claims.is_admin);
-      const telegramId =
+      let isAdmin = Boolean(claims.is_admin);
+      let telegramId =
         typeof claims.telegram_id === 'number'
           ? (claims.telegram_id as number)
           : null;
+
+      // Fallback: if the JWT doesn't carry telegram_id / is_admin claims (Custom
+      // Access Token Hook inactive), pull them from public.users so the rest of
+      // the app still works.
+      if (telegramId === null || !isAdmin) {
+        fetchUserProfile(session.user.id)
+          .then((profile) => {
+            if (!profile) return;
+            if (telegramId === null && profile.telegram_id !== null) {
+              telegramId = profile.telegram_id;
+            }
+            if (!isAdmin && profile.is_admin) isAdmin = true;
+            setState({
+              loading: false,
+              session,
+              user: session.user,
+              isAdmin,
+              telegramId,
+            });
+          })
+          .catch((err) => {
+            // eslint-disable-next-line no-console
+            console.warn('[auth] profile fallback failed', err);
+          });
+      }
+
       setState({
         loading: false,
         session,

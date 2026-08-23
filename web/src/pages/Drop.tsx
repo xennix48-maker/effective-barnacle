@@ -8,7 +8,7 @@ import { pushToast } from '../components/Toast';
 import { formatMMK, formatMMKShort } from '../lib/format';
 
 export function Drop() {
-  const { user, telegramId } = useAuth();
+  const { user } = useAuth();
   const { settings, loading } = useSettings();
   const { display, refresh } = useLiveBalance(user?.id ?? null);
   const navigate = useNavigate();
@@ -203,7 +203,7 @@ export function Drop() {
         <button
           className="btn btn--primary btn--block"
           type="submit"
-          disabled={submitting || !telegramId}
+          disabled={submitting}
         >
           {submitting ? 'တင်နေသည်...' : '💸 Drop တင်ပြမည်'}
         </button>

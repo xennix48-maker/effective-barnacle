@@ -39,7 +39,7 @@ export function AdminLayout() {
         </button>
         <div>
           <h1 className="page-header__title">⚙️ Admin Panel</h1>
-          <p className="page-header__sub">Btcak Management Console</p>
+          <p className="page-header__sub">BITCOIN MINING Console</p>
         </div>
       </div>
 

@@ -1,5 +1,13 @@
 import { supabase } from './supabase';
 
+export type UserProfile = {
+  id: string;
+  telegram_id: number | null;
+  first_name: string | null;
+  username: string | null;
+  is_admin: boolean;
+};
+
 export type MachineLevel = {
   level: string;
   name: string;
@@ -77,6 +85,27 @@ export async function fetchUserMachines(userId: string): Promise<UserMachine[]> 
     .order('requested_at', { ascending: false });
   if (error) throw error;
   return (data ?? []) as UserMachine[];
+}
+
+/**
+ * Fetches the caller's profile row. Used as a fallback when the JWT doesn't
+ * carry the telegram_id / is_admin claims (Custom Access Token Hook inactive).
+ */
+export async function fetchUserProfile(userId: string): Promise<UserProfile | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id,telegram_id,first_name,username,is_admin')
+    .eq('id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  return {
+    id: data.id,
+    telegram_id: data.telegram_id != null ? Number(data.telegram_id) : null,
+    first_name: data.first_name ?? null,
+    username: data.username ?? null,
+    is_admin: Boolean(data.is_admin),
+  };
 }
 
 export async function fetchBalanceSnapshot(userId: string): Promise<BalanceSnapshot | null> {
