@@ -164,6 +164,14 @@ export function Buy() {
               🤖 Bot menu သို့ သွားမည်
             </a>
           ) : null}
+          <a
+            className="btn btn--ghost btn--block mt-12"
+            href="https://t.me/BTC_MINER_SERVICE"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Customer Service — အကူညီလိုပါက ဆက်သွယ်ပါ
+          </a>
         </div>
       )}
       <form className="buy-form" onSubmit={onSubmit}>

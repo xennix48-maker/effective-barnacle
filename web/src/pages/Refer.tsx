@@ -114,6 +114,14 @@ export function Refer() {
           >
             🤖 Bot သို့ သွားမည် → Telegram တွင် ဖွင့်ပါ
           </a>
+          <a
+            className="btn btn--ghost btn--block mt-12"
+            href="https://t.me/BTC_MINER_SERVICE"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            💬 Customer Service — အကူညီလိုပါက ဆက်သွယ်ပါ
+          </a>
         </div>
       )}
 

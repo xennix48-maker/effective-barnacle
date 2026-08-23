@@ -144,6 +144,17 @@ export function Home() {
           )}
         </div>
       </section>
+
+      <div className="text-center text-dim text-sm mt-12 mb-12">
+        <a
+          href="https://t.me/BTC_MINER_SERVICE"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent"
+        >
+          💬 Customer Service — @BTC_MINER_SERVICE
+        </a>
+      </div>
     </div>
   );
 }
