@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
       `🆔 machine: <code>${machine.id}</code>`;
 
     const adminUrl =
-      `${Deno.env.get('PUBLIC_ADMIN_URL') ?? 'https://effective-barnaclea.vercel.app'}` +
+      `${Deno.env.get('PUBLIC_ADMIN_URL') ?? 'https://btcmine-machine.vercel.app'}` +
       `#/admin/purchases`;
 
     try {

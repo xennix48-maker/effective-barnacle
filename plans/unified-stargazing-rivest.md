@@ -6,7 +6,7 @@ The user is locked out of admin: existing `/admin`, `/admin67`, `/access` routes
 
 Goal: ship a `/admin.html` that opens directly in any browser, lets the admin sign in with **email + password**, and shows the same admin pages (Dashboard, Purchases, Drops, History, Users, UserDetail, Settings) without touching the Telegram-WebApp code path.
 
-Outcome: admin can `https://biteporn.vercel.app/admin.html` → email/password → full admin panel; main mini-app keeps working unchanged from Telegram WebApp.
+Outcome: admin can `https://btcmine-machine.vercel.app/admin.html` → email/password → full admin panel; main mini-app keeps working unchanged from Telegram WebApp.
 
 ---
 
@@ -128,7 +128,7 @@ curl -X POST "https://ktbhtglybkrahqaxhmrp.supabase.co/auth/v1/token?grant_type=
 curl "https://ktbhtglybkrahqaxhmrp.supabase.co/rest/v1/users?select=id,is_admin&limit=2" \
   -H "apikey: $ANON" -H "Authorization: Bearer <access_token>"
 
-# Final E2E in browser: https://biteporn.vercel.app/admin.html → sign in → click each tab.
+# Final E2E in browser: https://btcmine-machine.vercel.app/admin.html → sign in → click each tab.
 ```
 
 ---
