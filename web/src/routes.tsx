@@ -13,6 +13,7 @@ import { Drops } from './pages/admin/Drops';
 import { Settings as AdminSettings } from './pages/admin/Settings';
 import { Users } from './pages/admin/Users';
 import { ToastHost } from './components/Toast';
+import { BottomNav } from './components/BottomNav';
 
 export function AppRoutes() {
   const { loading } = useAuth();
@@ -20,14 +21,12 @@ export function AppRoutes() {
   if (loading) {
     return (
       <div className="app-loading">
-        <div className="app-loading__spinner" />
-        <p>�ဏစောင့်ပါ...</p>
+        <div className="app-loading__logo">₿</div>
+        <div className="spinner" />
+        <p>ခဏစောင့်ပါ...</p>
       </div>
     );
   }
-
-  // Outside Telegram + no session: show NotAuthorized (the auth hook already returned without user).
-  const inTelegram = typeof window !== 'undefined' && Boolean((window as any).Telegram?.WebApp?.initData);
 
   return (
     <HashRouter>
@@ -50,7 +49,7 @@ export function AppRoutes() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <ToastHost />
-      {!inTelegram ? null : null}
+      <BottomNav />
     </HashRouter>
   );
 }

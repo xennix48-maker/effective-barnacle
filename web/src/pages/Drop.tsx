@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSettings } from '../hooks/useSettings';
@@ -18,39 +18,56 @@ export function Drop() {
   const [amount, setAmount] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (!loading && settings && !settings.drop_enabled) {
-      // Show waiting screen
-    }
-  }, [loading, settings]);
-
   if (loading) {
     return (
-      <div className="page">
-        <p>ခဏစောင့်ပါ...</p>
+      <div className="app-shell">
+        <div className="empty">
+          <div className="spinner" style={{ margin: '0 auto 8px' }} />
+          <p className="text-dim">Settings load နေသည်...</p>
+        </div>
       </div>
     );
   }
 
   if (!settings) {
     return (
-      <div className="page">
-        <p>Settings load မရပါ။</p>
-        <button onClick={() => navigate('/')}>ပြန်သွ�းမည်</button>
+      <div className="app-shell">
+        <button className="back-btn" onClick={() => navigate('/')}>← ပြန်သွားမည်</button>
+        <div className="empty">
+          <div className="empty__icon">⚠️</div>
+          <h3 className="empty__title">Settings load မရပါ</h3>
+          <p className="empty__sub">ခဏကြာပြီးမှ ပြန်လာပါ။</p>
+        </div>
       </div>
     );
   }
 
   if (!settings.drop_enabled) {
     return (
-      <div className="page page--centered">
-        <div className="drop-closed-card">
-          <div className="drop-closed-card__icon">⏳</div>
-          <h2>Admin က Drop ဖွင့်ပေးတာ စောင့်ပါ</h2>
-          <p>
-            Drop (ငွေထုတ်ယူခြင်း) ကို Admin က ဖွင့်ပေ�မှသာ အသုံးပြုနိုင်ပါသည�။
-            ခဏကြာတဲ့နောက် ပြန�လာစစ်ပါ။
+      <div className="app-shell">
+        <div className="page-header">
+          <button
+            className="page-header__back"
+            onClick={() => navigate(-1)}
+            aria-label="ပြန်သွားမည်"
+          >
+            ←
+          </button>
+          <div>
+            <h1 className="page-header__title">Drop</h1>
+            <p className="page-header__sub">ငွေထုတ်ယူရန်</p>
+          </div>
+        </div>
+        <div className="drop-closed-card" style={{ margin: '40px auto' }}>
+          <div className="drop-closed-card__icon">🔒</div>
+          <h2 className="fw-700">Admin က Drop ဖွင့်ပေးတာ စောင့်ပါ</h2>
+          <p className="text-dim mt-12">
+            Drop (ငွေထုတ်ယူခြင်း) ကို Admin က ဖွင့်ပေးမှသာ အသုံးပြုနိုင်ပါသည်။
+            ခဏကြာတဲ့နောက် ပြန်လာစစ်ပါ။
           </p>
+          <div className="badge badge--amber mt-16">
+            ⏳ စောင့်ဆိုင့်နေသည်
+          </div>
         </div>
       </div>
     );
@@ -69,7 +86,7 @@ export function Drop() {
       return;
     }
     if (!phone.trim() || !accountName.trim()) {
-      pushToast('ဖုန်းနံပါ�်နှင့် အမည် �ြည့်ပါ', 'error');
+      pushToast('ဖုန်းနံပါတ်နှင့် အမည် ဖြည့်ပါ', 'error');
       return;
     }
     setSubmitting(true);
@@ -81,69 +98,114 @@ export function Drop() {
         phone: phone.trim(),
         accountName: accountName.trim(),
       });
-      pushToast('Drop တင်ပြီးပါပြီ။ Admin စစ်ဆေးပ�ီးမှ ငွေပို့ပါမည်။', 'success');
+      pushToast('Drop တင်ပြီးပါပြီ။ Admin စစ်ဆေးပြီးမှ ငွေပို့ပါမည်။', 'success');
       setAmount('');
       refresh();
     } catch (e: any) {
-      pushToast(`မ�ောင်မြင်ပ�: ${e?.message ?? 'unknown'}`, 'error');
+      pushToast(`မအောင်မြင်ပါ: ${e?.message ?? 'unknown'}`, 'error');
     } finally {
       setSubmitting(false);
     }
   }
 
+  const amtNum = Number(amount) || 0;
+  const afterDrop = Math.max(0, display - amtNum);
+
   return (
-    <div className="page">
-      <button className="back-btn" onClick={() => navigate(-1)}>← ပြ�်သွားမည်</button>
-      <h1 className="page-title">Drop — ငွေထ�တ်ယူရန်</h1>
-      <div className="drop-balance-card">
-        <span className="drop-balance-card__label">လ�်ရှိလက်ကျန�ငွေ</span>
-        <span className="drop-balance-card__value">{formatMMKShort(display)} MMK</span>
+    <div className="app-shell">
+      <div className="page-header">
+        <button
+          className="page-header__back"
+          onClick={() => navigate(-1)}
+          aria-label="ပြန်သွားမည်"
+        >
+          ←
+        </button>
+        <div>
+          <h1 className="page-header__title">Drop</h1>
+          <p className="page-header__sub">ငွေထုတ်ယူရန်</p>
+        </div>
       </div>
 
+      {/* Balance card */}
+      <section className="drop-balance">
+        <div className="drop-balance__label">လက်ရှိ လက်ကျန်ငွေ</div>
+        <div className="drop-balance__value">
+          {formatMMKShort(display)} <span className="text-md text-dim">MMK</span>
+        </div>
+        {amtNum > 0 ? (
+          <div className="drop-balance__after">
+            ထုတ်ပြီးနောက် → <b>{formatMMKShort(afterDrop)} MMK</b>
+          </div>
+        ) : null}
+      </section>
+
       <form className="buy-form" onSubmit={onSubmit}>
-        <label className="form-label">င�ေလက်ခံမည့် �ည်းလမ်း</label>
-        <div className="method-toggle">
-          <button
-            type="button"
-            className={`method-toggle__btn ${method === 'wave' ? 'method-toggle__btn--active' : ''}`}
-            onClick={() => setMethod('wave')}
-          >Wave Money</button>
-          <button
-            type="button"
-            className={`method-toggle__btn ${method === 'kbz' ? 'method-toggle__btn--active' : ''}`}
-            onClick={() => setMethod('kbz')}
-          >KBZ Pay</button>
+        <h2 className="buy-form__title">Drop အချက်အလက်</h2>
+
+        <div className="field">
+          <label className="field__label">ငွေလက်ခံမည့် နည်းလမ်း</label>
+          <div className="method-toggle">
+            <button
+              type="button"
+              className={`method-toggle__btn ${method === 'wave' ? 'method-toggle__btn--active' : ''}`}
+              onClick={() => setMethod('wave')}
+            >
+              <span className="method-toggle__icon">🌊</span>
+              Wave Money
+            </button>
+            <button
+              type="button"
+              className={`method-toggle__btn ${method === 'kbz' ? 'method-toggle__btn--active' : ''}`}
+              onClick={() => setMethod('kbz')}
+            >
+              <span className="method-toggle__icon">💳</span>
+              KBZ Pay
+            </button>
+          </div>
         </div>
 
-        <label className="form-label">သင့် Wave / KBZ �ုန်းနံပါတ်</label>
-        <input
-          className="form-input"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="09xxxxxxxxx"
-          inputMode="tel"
-        />
+        <div className="field">
+          <label className="field__label">သင့် Wave / KBZ ဖုန်းနံပါတ်</label>
+          <input
+            className="input"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="09xxxxxxxxx"
+            inputMode="tel"
+          />
+        </div>
 
-        <label className="form-label">ငွေလက်ခံမည့် အမ�်</label>
-        <input
-          className="form-input"
-          value={accountName}
-          onChange={(e) => setAccountName(e.target.value)}
-          placeholder="အမည်"
-        />
+        <div className="field">
+          <label className="field__label">ငွေလက်ခံမည့် အမည်</label>
+          <input
+            className="input"
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            placeholder="အမည်"
+          />
+        </div>
 
-        <label className="form-label">ပ�ာဏ (MMK)</label>
-        <input
-          className="form-input"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-          placeholder="0"
-          inputMode="decimal"
-        />
-        <p className="form-hint">Drop ပမာဏ ≤ {formatMMK(display)} MMK</p>
+        <div className="field">
+          <label className="field__label">ပမာဏ (MMK)</label>
+          <input
+            className="input input--mono"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+            placeholder="0"
+            inputMode="decimal"
+          />
+          <p className="text-mute text-sm mt-4">
+            Drop ပမာဏ ≤ {formatMMK(display)} MMK
+          </p>
+        </div>
 
-        <button className="cta-btn" type="submit" disabled={submitting || !telegramId}>
-          {submitting ? 'တင်နေသည်...' : 'Drop တင်ပြမည်'}
+        <button
+          className="btn btn--primary btn--block"
+          type="submit"
+          disabled={submitting || !telegramId}
+        >
+          {submitting ? 'တင်နေသည်...' : '💸 Drop တင်ပြမည်'}
         </button>
       </form>
     </div>

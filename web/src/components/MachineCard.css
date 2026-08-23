@@ -1,74 +1,134 @@
 .machine-card {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 16px;
-  border-radius: 14px;
-  background: #141a26;
-  border: 1px solid #1f2737;
-  color: #e8eaf0;
-  text-decoration: none;
-  transition: transform 0.12s ease, border-color 0.12s ease;
-}
-
-.machine-card:hover {
-  transform: translateY(-2px);
-  border-color: #f7931a;
-}
-
-.machine-card__head {
-  display: flex;
-  align-items: baseline;
   gap: 10px;
-  margin-bottom: 6px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, var(--bg-2) 0%, var(--bg-1) 100%);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  transition: var(--t);
+  position: relative;
+  overflow: hidden;
 }
+.machine-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+  opacity: 0.6;
+  transition: var(--t);
+}
+.machine-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+  box-shadow: 0 12px 28px rgba(247, 147, 26, 0.2);
+}
+.machine-card:hover::before { opacity: 1; height: 4px; }
+.machine-card:active { transform: translateY(-1px); }
 
-.machine-card__level {
-  font-size: 22px;
-  font-weight: 800;
-  color: #f7931a;
+.machine-card--green::before { background: linear-gradient(90deg, var(--green) 0%, #16a34a 100%); }
+.machine-card--blue::before  { background: linear-gradient(90deg, var(--blue) 0%, #2563eb 100%); }
+.machine-card--amber::before { background: linear-gradient(90deg, var(--amber) 0%, #d97706 100%); }
+
+.machine-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+.machine-card__icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  display: grid; place-items: center;
+  font-size: 22px;
+}
+.machine-card--green .machine-card__icon { background: var(--green-soft); }
+.machine-card--blue  .machine-card__icon { background: var(--blue-soft); }
+.machine-card--amber .machine-card__icon { background: var(--amber-soft); }
 
 .machine-card__name {
   font-size: 13px;
-  opacity: 0.7;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.machine-card__level {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-3) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.machine-card__row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
+.machine-card__stat { display: flex; flex-direction: column; gap: 2px; }
+.machine-card__stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
-
-.machine-card__row--small {
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-.machine-card__label {
-  opacity: 0.7;
-}
-
-.machine-card__price {
+.machine-card__stat-value {
+  font-size: 16px;
   font-weight: 700;
+  font-feature-settings: "tnum" 1;
 }
 
-.machine-card__earn {
-  font-weight: 700;
-  color: #4ade80;
+.machine-card__divider {
+  height: 1px;
+  background: var(--divider);
 }
 
 .machine-card__rate {
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.machine-card__rate-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-3);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.machine-card__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+}
+.machine-card__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
 }
 
 .machine-card__cta {
-  margin-top: 8px;
-  padding: 10px 0;
+  margin-top: 4px;
+  padding: 12px;
   text-align: center;
-  background: #f7931a;
-  color: #0b0f17;
-  border-radius: 10px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+  color: #1a0f00;
+  border-radius: var(--radius);
   font-weight: 700;
-  font-size: 14px;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 6px 16px var(--accent-glow);
 }

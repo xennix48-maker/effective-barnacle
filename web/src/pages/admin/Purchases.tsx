@@ -35,7 +35,6 @@ export function Purchases() {
           userMap.set(u.id as string, u as any);
         }
       }
-      // Fetch related machine levels
       const machineIds = txns.map((t) => t.related_machine).filter(Boolean) as string[];
       const machineMap = new Map<string, string>();
       if (machineIds.length) {
@@ -61,9 +60,7 @@ export function Purchases() {
     }
   }
 
-  useEffect(() => {
-    void load();
-  }, []);
+  useEffect(() => { void load(); }, []);
 
   async function onApprove(id: string) {
     setBusyId(id);
@@ -79,16 +76,16 @@ export function Purchases() {
   }
 
   async function onReject(id: string) {
-    const reason = window.prompt('ငြင်းပယ်ရသည့် �ကြောင်းအရ�်း:');
+    const reason = window.prompt('ငြင်းပယ်ရသည့် အကြောင်းအရင်း:');
     if (reason == null) return;
     if (!reason.trim()) {
-      pushToast('အကြောင်း�ရင်း ထည့်ပါ', 'error');
+      pushToast('အကြောင်းအရင်း ထည့်ပါ', 'error');
       return;
     }
     setBusyId(id);
     try {
       await approvePurchase(id, false, reason.trim());
-      pushToast('Reject လုပ�ပြီးပါပြီ', 'info');
+      pushToast('Reject လုပ်ပြီးပါပြီ', 'info');
       await load();
     } catch (e: any) {
       pushToast(`မအောင်မြင်ပါ: ${e?.message ?? 'unknown'}`, 'error');
@@ -97,58 +94,100 @@ export function Purchases() {
     }
   }
 
-  if (loading) return <p>ခဏစောင့်ပါ...</p>;
+  if (loading) {
+    return (
+      <div className="empty">
+        <div className="spinner" style={{ margin: '0 auto 8px' }} />
+        <p className="text-dim">Loading purchases...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="admin-page">
-      <h2 className="page-title">Pending Purchases ({rows.length})</h2>
-      {rows.length === 0 ? <p>စောင့်ဆိုင်းနေသော purchase မရှိပါ။</p> : null}
+    <section className="stack">
+      <div className="row row--between">
+        <h3 className="home-section__title">🛒 Pending Purchases</h3>
+        <span className="badge badge--accent">{rows.length} ခု</span>
+      </div>
+
+      {rows.length === 0 ? (
+        <div className="admin-empty">
+          ✓ စောင့်ဆိုင်းနေသော purchase မရှိပါ
+        </div>
+      ) : null}
+
       <div className="admin-list">
         {rows.map((r) => (
-          <div key={r.id} className="admin-list__item">
-            <div className="admin-list__head">
+          <article key={r.id} className="admin-row">
+            <header className="admin-row__head">
               <div>
-                <b>{r.user_first_name ?? '(no name)'}</b>{' '}
-                {r.user_username ? <span className="muted">@{r.user_username}</span> : null}
-                {' '}· <span className="muted">tg:{r.user_telegram_id ?? '?'}</span>
+                <div className="admin-row__title">
+                  {r.user_first_name ?? '(no name)'}
+                  {r.user_username ? (
+                    <span className="text-dim text-sm" style={{ marginLeft: 6 }}>
+                      @{r.user_username}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="text-dim text-sm">
+                  tg:{r.user_telegram_id ?? '?'} · {formatDate(r.created_at)}
+                </div>
               </div>
-              <div className="muted">{formatDate(r.created_at)}</div>
+              <span className="badge badge--amber">⏳ Pending</span>
+            </header>
+
+            <div className="admin-detail-row">
+              <span className="admin-detail-row__label">Machine</span>
+              <span className="admin-detail-row__value text-accent">{r.level ?? '?'}</span>
             </div>
-            <div className="admin-list__row">
-              <span>Level</span><b>{r.level ?? '?'}</b>
+            <div className="admin-detail-row">
+              <span className="admin-detail-row__label">ပမာဏ</span>
+              <span className="admin-detail-row__value">
+                {formatMMKShort(Number(r.amount_mmk))} MMK
+              </span>
             </div>
-            <div className="admin-list__row">
-              <span>ပမာဏ</span><b>{formatMMKShort(Number(r.amount_mmk))} MMK</b>
+            <div className="admin-detail-row">
+              <span className="admin-detail-row__label">ငွေပေးချေမှု</span>
+              <span className="admin-detail-row__value">
+                <span className="badge badge--blue">{r.payment_method ?? '—'}</span>
+              </span>
             </div>
-            <div className="admin-list__row">
-              <span>ငွေပေးချေမှု</span><b>{r.payment_method ?? '—'}</b>
+            <div className="admin-detail-row">
+              <span className="admin-detail-row__label">ဖုန်း</span>
+              <span className="admin-detail-row__value text-mono">{r.phone ?? '—'}</span>
             </div>
-            <div className="admin-list__row">
-              <span>ဖုန်း</span><b>{r.phone ?? '—'}</b>
-            </div>
-            <div className="admin-list__row">
-              <span>Last 6</span><b>{r.last6 ?? '—'}</b>
+            <div className="admin-detail-row">
+              <span className="admin-detail-row__label">Last 6</span>
+              <span className="admin-detail-row__value text-mono">{r.last6 ?? '—'}</span>
             </div>
             {r.note ? (
-              <div className="admin-list__row">
-                <span>Note</span><b className="note-cell">{r.note}</b>
+              <div className="admin-detail-row">
+                <span className="admin-detail-row__label">Note</span>
+                <span className="admin-detail-row__value" style={{ maxWidth: '60%', textAlign: 'right' }}>
+                  {r.note}
+                </span>
               </div>
             ) : null}
-            <div className="admin-list__actions">
+
+            <div className="admin-row__actions">
               <button
-                className="cta-btn cta-btn--small cta-btn--approve"
+                className="btn btn--success"
                 disabled={busyId === r.id}
                 onClick={() => onApprove(r.id)}
-              >Approve</button>
+              >
+                ✓ Approve
+              </button>
               <button
-                className="cta-btn cta-btn--small cta-btn--reject"
+                className="btn btn--danger"
                 disabled={busyId === r.id}
                 onClick={() => onReject(r.id)}
-              >Reject</button>
+              >
+                ✕ Reject
+              </button>
             </div>
-          </div>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

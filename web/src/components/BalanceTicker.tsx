@@ -9,33 +9,35 @@ type Props = {
 };
 
 /**
- * Server-anchored 1Hz interpolated balance display.
- * Renders the balance, optionally a "rate" subline (per-second income),
- * and ticks every second between server re-syncs.
+ * Premium live balance card with pulse indicator and per-second / per-day
+ * rate pills. Server-anchored — interpolates 1Hz between 30s re-syncs.
  */
 export function BalanceTicker({ userId, label = 'လက်ကျန်ငွေ', showRate = true }: Props) {
   const { display, ratePerSec } = useLiveBalance(userId);
-
-  if (!userId) {
-    return (
-      <div className="balance-ticker">
-        <div className="balance-ticker__label">{label}</div>
-        <div className="balance-ticker__value">— MMK</div>
-      </div>
-    );
-  }
+  const muted = !userId;
 
   const dailyEarning = ratePerSec * 86400;
 
   return (
-    <div className="balance-ticker">
-      <div className="balance-ticker__label">{label}</div>
-      <div className="balance-ticker__value">
-        {formatMMKShort(display)} <span className="balance-ticker__unit">MMK</span>
+    <div className={`balance-ticker${muted ? ' balance-ticker--muted' : ''}`}>
+      <div className="balance-ticker__head">
+        <span className="balance-ticker__label">{label}</span>
+        {!muted ? (
+          <span className="balance-ticker__pulse">Live</span>
+        ) : null}
       </div>
-      {showRate ? (
+      <div className="balance-ticker__value">
+        {muted ? '—' : formatMMKShort(display)}
+        <span className="balance-ticker__unit">MMK</span>
+      </div>
+      {showRate && !muted && ratePerSec > 0 ? (
         <div className="balance-ticker__rate">
-          +{formatMMK(ratePerSec)} MMK/s · +{formatMMKShort(dailyEarning)} MMK/day
+          <span className="balance-ticker__pill">
+            +{formatMMK(ratePerSec)} MMK/s
+          </span>
+          <span className="balance-ticker__pill balance-ticker__pill--green">
+            +{formatMMKShort(dailyEarning)} MMK/day
+          </span>
         </div>
       ) : null}
     </div>
