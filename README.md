@@ -149,7 +149,8 @@ Then update BotFather's menu button URL to your Vercel production domain.
     │   ├── 0002_rls.sql
     │   ├── 0003_views.sql
     │   ├── 0004_seed.sql
-    │   └── 0005_auth_hook.sql
+    │   ├── 0005_auth_hook.sql
+    │   └── 0006_fix_security_advisors.sql   # SECURITY INVOKER views + search_path pinning
     └── functions/
         ├── _shared/                  # cors, auth (admin guard)
         ├── tg-auth/                  # validate initData → mint session
