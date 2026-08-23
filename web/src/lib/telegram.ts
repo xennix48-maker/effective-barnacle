@@ -65,6 +65,21 @@ export function openLink(url: string): void {
   }
 }
 
+/**
+ * Open Telegram's native share dialog with prefilled URL and text.
+ * Works inside WebApp via tg:// share, falls back to a plain t.me link.
+ */
+export function shareUrl(url: string, text?: string): void {
+  const params = new URLSearchParams({ url });
+  if (text) params.set('text', text);
+  const shareUrl = `https://t.me/share/url?${params.toString()}`;
+  try {
+    WebApp.openTelegramLink(shareUrl);
+  } catch {
+    openLink(shareUrl);
+  }
+}
+
 export function close(): void {
   try {
     WebApp.close();

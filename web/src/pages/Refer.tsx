@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { fetchReferralStats } from '../lib/api';
 import { pushToast } from '../components/Toast';
-import { openLink } from '../lib/telegram';
+import { shareUrl, hapticImpact } from '../lib/telegram';
 import { formatMMKShort } from '../lib/format';
 
 export function Refer() {
@@ -31,6 +31,18 @@ export function Refer() {
     navigator.clipboard.writeText(refLink).then(
       () => pushToast('Link ကူးပြီးပါပြီ', 'success'),
       () => pushToast('ကူး၍ မရပါ', 'error')
+    );
+  }
+
+  function shareToTelegram() {
+    if (!refLink) return;
+    hapticImpact('medium');
+    shareUrl(
+      refLink,
+      '🎁 Btcak — Bitcoin Mining ကနေ ကျွန်တော်တို့ အတူတူ ရင်းနှီးကျွမ်းဝင်မယ်\n' +
+        '⛏️ 5 မျိုးသော Mining Machine ရွေးချယ်ဝယ်ယူနိုင်ပြီး\n' +
+        '💸 ဖိတ်လိုက်တိုင်း 5,000 MMK (ကန့်သတ်မရှိ)\n' +
+        '👇 ဒီ link နှိပ်ပြီး အကောင့်ဖွင့်လိုက်ပါ — ငါ့ကို ဆုကြေး ရပါမယ်'
     );
   }
 
@@ -72,7 +84,7 @@ export function Refer() {
             <button className="btn btn--primary" onClick={copyLink}>
               📋 ကူးမည်
             </button>
-            <button className="btn btn--ghost" onClick={() => openLink(refLink)}>
+            <button className="btn btn--ghost" onClick={shareToTelegram}>
               ✈️ Telegram မျှဝေ
             </button>
           </div>
