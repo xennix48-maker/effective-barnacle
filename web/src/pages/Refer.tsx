@@ -7,7 +7,7 @@ import { shareUrl, hapticImpact } from '../lib/telegram';
 import { formatMMKShort } from '../lib/format';
 
 export function Refer() {
-  const { user, telegramId } = useAuth();
+  const { user, telegramId, authError, outsideTelegram } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<{
     total_referrals: number;
@@ -89,7 +89,18 @@ export function Refer() {
             </button>
           </div>
         </div>
-      ) : null}
+      ) : (
+        <div className="card" style={{ borderColor: 'rgba(247, 147, 26, 0.3)', background: 'rgba(247, 147, 26, 0.08)' }}>
+          <div className="fw-700" style={{ marginBottom: 6 }}>⚠️ Refer link unavailable</div>
+          <div className="text-dim text-sm">
+            {outsideTelegram
+              ? 'Telegram WebApp data not detected. Open this app from inside Telegram to get your personal invite link.'
+              : authError
+                ? `Auth failed: ${authError}. Reload to retry — your telegram_id is required to build the invite link.`
+                : 'Loading your account...'}
+          </div>
+        </div>
+      )}
 
       {/* Stats */}
       {stats ? (

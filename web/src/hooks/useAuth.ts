@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { signInWithTelegram } from '../lib/auth';
 import { fetchUserProfile } from '../lib/api';
 import { getTelegramUser, ready } from '../lib/telegram';
+import { pushToast } from '../components/Toast';
 import type { Session, User } from '@supabase/supabase-js';
 
 export type AuthState = {
@@ -11,6 +12,10 @@ export type AuthState = {
   user: User | null;
   isAdmin: boolean;
   telegramId: number | null;
+  /** When Telegram sign-in fails (HMAC mismatch, network, etc.) this captures the reason. */
+  authError: string | null;
+  /** True when running outside Telegram WebApp — no auth attempt is possible. */
+  outsideTelegram: boolean;
 };
 
 const initial: AuthState = {
@@ -19,6 +24,8 @@ const initial: AuthState = {
   user: null,
   isAdmin: false,
   telegramId: null,
+  authError: null,
+  outsideTelegram: false,
 };
 
 /**
@@ -47,7 +54,7 @@ export function useAuth(): AuthState {
       const tg = getTelegramUser();
       if (!tg) {
         // Running outside Telegram — surface no session, no auth attempt
-        setState({ ...initial, loading: false });
+        setState({ ...initial, loading: false, outsideTelegram: true });
         return;
       }
 
@@ -56,11 +63,13 @@ export function useAuth(): AuthState {
         const { data: after } = await supabase.auth.getSession();
         if (cancelled) return;
         if (after.session) applySession(after.session);
-        else setState({ ...initial, loading: false });
-      } catch (e) {
+        else setState({ ...initial, loading: false, authError: 'No session after sign-in' });
+      } catch (e: any) {
         // eslint-disable-next-line no-console
         console.error('[auth] signInWithTelegram failed', e);
-        setState({ ...initial, loading: false });
+        const msg = e?.message ?? String(e);
+        pushToast(`Sign-in failed: ${msg}`, 'error');
+        setState({ ...initial, loading: false, authError: msg });
       }
     }
 
@@ -89,6 +98,8 @@ export function useAuth(): AuthState {
               user: session.user,
               isAdmin,
               telegramId,
+              authError: null,
+              outsideTelegram: false,
             });
           })
           .catch((err) => {
@@ -103,6 +114,8 @@ export function useAuth(): AuthState {
         user: session.user,
         isAdmin,
         telegramId,
+        authError: null,
+        outsideTelegram: false,
       });
     }
 

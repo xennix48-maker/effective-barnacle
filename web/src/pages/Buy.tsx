@@ -14,7 +14,7 @@ import { formatMMK, formatMMKShort } from '../lib/format';
 export function Buy() {
   const { level } = useParams<{ level: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, authError, outsideTelegram } = useAuth();
   const { settings } = useSettings();
   const [machine, setMachine] = useState<MachineLevel | null>(null);
   const [method, setMethod] = useState<'wave' | 'kbz'>('wave');
@@ -47,7 +47,10 @@ export function Buy() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!user) {
+      pushToast('Sign-in required — Telegram auth failed. Reload the mini-app.', 'error');
+      return;
+    }
     if (!phone.trim()) {
       pushToast('ဖုန်းနံပါတ် ထည့်ပါ', 'error');
       return;
@@ -139,6 +142,18 @@ export function Buy() {
       ) : null}
 
       {/* Form */}
+      {user ? null : (
+        <div className="card" style={{ borderColor: 'rgba(247, 147, 26, 0.3)', background: 'rgba(247, 147, 26, 0.08)' }}>
+          <div className="fw-700" style={{ marginBottom: 6 }}>⚠️ Sign-in required</div>
+          <div className="text-dim text-sm">
+            {outsideTelegram
+              ? 'Telegram WebApp data not detected. Open this app from inside Telegram.'
+              : authError
+                ? `Auth failed: ${authError}. Reload the mini-app to retry.`
+                : 'Loading your account...'}
+          </div>
+        </div>
+      )}
       <form className="buy-form" onSubmit={onSubmit}>
         <h2 className="buy-form__title">ငွေပေးချေမှု အချက်အလက်</h2>
 
