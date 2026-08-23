@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { signInWithTelegram } from '../lib/auth';
 import { fetchUserProfile } from '../lib/api';
-import { getInitData, ready } from '../lib/telegram';
+import { getInitData, isInsideTelegram, ready } from '../lib/telegram';
 import { pushToast } from '../components/Toast';
 import type { Session, User } from '@supabase/supabase-js';
 
@@ -14,7 +14,13 @@ export type AuthState = {
   telegramId: number | null;
   /** When Telegram sign-in fails (HMAC mismatch, network, etc.) this captures the reason. */
   authError: string | null;
-  /** True when running outside Telegram WebApp — no auth attempt is possible. */
+  /** Telegram's web-app script is loaded and reports a platform — we're in some kind of Telegram webview. */
+  insideTelegram: boolean;
+  /**
+   * True when initData is missing inside a Telegram webview — typically means
+   * the user opened the URL via a chat link rather than a `web_app` button.
+   * UI should ask them to reopen via the bot menu / inline button.
+   */
   outsideTelegram: boolean;
 };
 
@@ -25,6 +31,7 @@ const initial: AuthState = {
   isAdmin: false,
   telegramId: null,
   authError: null,
+  insideTelegram: false,
   outsideTelegram: false,
 };
 
@@ -54,9 +61,13 @@ export function useAuth(): AuthState {
       // the signed initData string — even if initDataUnsafe.user is missing on
       // some platforms, initData is set whenever the WebApp launched from a bot.
       const initData = getInitData();
+      const insideTg = isInsideTelegram();
       if (!initData) {
-        // No signed data — running outside Telegram WebApp. Surface no session.
-        setState({ ...initial, loading: false, outsideTelegram: true });
+        // No signed data. Two cases:
+        //   - in Telegram webview but URL opened via plain chat link → ask user
+        //     to reopen via the bot's menu / inline web_app button
+        //   - not in Telegram at all (regular browser) → "open in Telegram"
+        setState({ ...initial, loading: false, outsideTelegram: true, insideTelegram: insideTg });
         return;
       }
 
@@ -101,6 +112,7 @@ export function useAuth(): AuthState {
               isAdmin,
               telegramId,
               authError: null,
+              insideTelegram: true,
               outsideTelegram: false,
             });
           })
@@ -117,6 +129,7 @@ export function useAuth(): AuthState {
         isAdmin,
         telegramId,
         authError: null,
+        insideTelegram: true,
         outsideTelegram: false,
       });
     }

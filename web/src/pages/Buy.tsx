@@ -14,7 +14,7 @@ import { formatMMK, formatMMKShort } from '../lib/format';
 export function Buy() {
   const { level } = useParams<{ level: string }>();
   const navigate = useNavigate();
-  const { user, authError, outsideTelegram } = useAuth();
+  const { user, authError, outsideTelegram, insideTelegram } = useAuth();
   const { settings } = useSettings();
   const [machine, setMachine] = useState<MachineLevel | null>(null);
   const [method, setMethod] = useState<'wave' | 'kbz'>('wave');
@@ -149,11 +149,21 @@ export function Buy() {
           <div className="fw-700" style={{ marginBottom: 6 }}>⚠️ Sign-in required</div>
           <div className="text-dim text-sm">
             {outsideTelegram
-              ? 'Telegram WebApp data not detected. Open this app from inside Telegram.'
+              ? insideTelegram
+                ? 'Telegram WebApp data is missing. Please reopen this app from the bot menu button or inline button — opening the link from a chat message does not start a Mini App session.'
+                : 'Telegram WebApp data not detected. Open this app from inside Telegram via the bot menu.'
               : authError
                 ? `Auth failed: ${authError}. Reload the mini-app to retry.`
                 : 'Loading your account...'}
           </div>
+          {outsideTelegram && insideTelegram ? (
+            <a
+              className="btn btn--primary btn--block mt-12"
+              href={`https://t.me/${(import.meta.env.VITE_BOT_USERNAME as string) || 'BITCOIN_MINING_OFFICAL'}`}
+            >
+              🤖 Bot menu သို့ သွားမည်
+            </a>
+          ) : null}
         </div>
       )}
       <form className="buy-form" onSubmit={onSubmit}>

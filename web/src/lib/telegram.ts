@@ -27,6 +27,30 @@ export function getStartParam(): string | undefined {
   return unsafe().start_param;
 }
 
+/**
+ * Reliable "are we running inside Telegram at all" signal. Telegram's web-app
+ * script populates `WebApp.platform` (e.g. 'ios', 'android', 'tdesktop', 'web')
+ * even when initData is missing — that happens when the URL is opened via a
+ * plain chat link rather than a `web_app` button. Use this to distinguish
+ * "open in Telegram" from "in Telegram, but please reopen via bot menu".
+ */
+export function isInsideTelegram(): boolean {
+  try {
+    const platform = (WebApp as any).platform as string | undefined;
+    return Boolean(platform) && platform !== 'unknown';
+  } catch {
+    return false;
+  }
+}
+
+export function getPlatform(): string {
+  try {
+    return ((WebApp as any).platform as string) || 'unknown';
+  } catch {
+    return 'unknown';
+  }
+}
+
 export function getTelegramUser(): TelegramUser | null {
   return unsafe().user ?? null;
 }
