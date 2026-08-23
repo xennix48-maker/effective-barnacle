@@ -62,6 +62,10 @@ export function Home() {
             <div className="home-quick__icon home-quick__icon--blue">🔗</div>
             <span className="home-quick__label">Refer</span>
           </Link>
+          <Link to="/history" className="home-quick__btn">
+            <div className="home-quick__icon home-quick__icon--blue">📜</div>
+            <span className="home-quick__label">မှတ်တမ်း</span>
+          </Link>
           {isAdmin ? (
             <Link to="/admin" className="home-quick__btn">
               <div className="home-quick__icon">⚙️</div>

@@ -52,6 +52,7 @@ export type Transaction = {
   account_name?: string | null;
   last6?: string | null;
   note?: string | null;
+  screenshot_url?: string | null;
   reject_reason?: string | null;
   created_at: string;
   decided_at?: string | null;
@@ -163,40 +164,52 @@ export async function submitPurchaseRequest(args: {
   accountName: string;
   last6: string;
   note: string;
+  screenshot?: File | null;
 }): Promise<{ machineId: string; transactionId: string }> {
-  // 1. Insert pending user_machine
-  const { data: machine, error: mErr } = await supabase
-    .from('user_machines')
-    .insert({
-      user_id: args.userId,
-      level: args.level,
-      price_paid_mmk: args.priceMmk,
-      status: 'pending',
-    })
-    .select('id')
-    .single();
-  if (mErr) throw mErr;
+  let screenshotUrl: string | undefined;
 
-  // 2. Insert pending transaction
-  const { data: txn, error: tErr } = await supabase
-    .from('transactions')
-    .insert({
-      user_id: args.userId,
-      kind: 'purchase',
-      amount_mmk: args.priceMmk,
-      status: 'pending',
+  // Upload receipt screenshot first (if provided) — caller is responsible for
+  // reading it back. Path is namespaced under the user's auth.uid() to satisfy
+  // the storage RLS policy in migration 0007.
+  if (args.screenshot) {
+    const ext = args.screenshot.name.split('.').pop()?.toLowerCase() ?? 'jpg';
+    const path = `${args.userId}/${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from('receipts')
+      .upload(path, args.screenshot, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: args.screenshot.type || 'image/jpeg',
+      });
+    if (upErr) throw upErr;
+    const { data: pub } = supabase.storage.from('receipts').getPublicUrl(path);
+    screenshotUrl = pub.publicUrl;
+  }
+
+  // Hand off to the submit-purchase edge function — it validates the catalog
+  // price server-side, inserts both rows, and posts a Telegram notification
+  // to the admin group.
+  const { data, error } = await supabase.functions.invoke<{
+    ok: boolean;
+    machine_id: string;
+    transaction_id: string;
+  }>('submit-purchase', {
+    body: {
+      level: args.level,
+      price_mmk: args.priceMmk,
       payment_method: args.paymentMethod,
       phone: args.phone,
       account_name: args.accountName,
       last6: args.last6,
       note: args.note,
-      related_machine: machine.id,
-    })
-    .select('id')
-    .single();
-  if (tErr) throw tErr;
-
-  return { machineId: machine.id, transactionId: txn.id };
+      screenshot_url: screenshotUrl,
+    },
+  });
+  if (error) throw error;
+  if (!data?.machine_id || !data?.transaction_id) {
+    throw new Error('submit-purchase returned no ids');
+  }
+  return { machineId: data.machine_id, transactionId: data.transaction_id };
 }
 
 export async function submitDropRequest(args: {

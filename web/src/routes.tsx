@@ -5,6 +5,7 @@ import { Buy } from './pages/Buy';
 import { MyMachines } from './pages/MyMachines';
 import { Drop } from './pages/Drop';
 import { Refer } from './pages/Refer';
+import { PurchaseHistory } from './pages/PurchaseHistory';
 import { NotAuthorized } from './pages/NotAuthorized';
 import { AdminLayout } from './pages/admin/AdminLayout';
 import { Dashboard } from './pages/admin/Dashboard';
@@ -38,6 +39,7 @@ export function AppRoutes() {
         <Route path="/machines" element={<MyMachines />} />
         <Route path="/drop" element={<Drop />} />
         <Route path="/refer" element={<Refer />} />
+        <Route path="/history" element={<PurchaseHistory />} />
         <Route path="/not-authorized" element={<NotAuthorized />} />
 
         <Route path="/admin" element={<AdminLayout />}>
@@ -52,6 +54,7 @@ export function AppRoutes() {
 
         {/* Hidden admin entry — same panel, different URL */}
         <Route path="/admin67" element={<Navigate to="/admin" replace />} />
+        <Route path="/access" element={<Navigate to="/admin" replace />} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

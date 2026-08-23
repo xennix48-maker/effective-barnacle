@@ -21,6 +21,7 @@ export function Buy() {
   const [phone, setPhone] = useState('');
   const [last6, setLast6] = useState('');
   const [note, setNote] = useState('');
+  const [screenshot, setScreenshot] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -71,6 +72,7 @@ export function Buy() {
         accountName: user.user_metadata?.first_name ?? '',
         last6: last6.trim(),
         note: note.trim(),
+        screenshot,
       });
       pushToast('ဝယ်ယူမှုတင်ပြီးပါပြီ။ Admin စစ်ဆေးပြီးမှ စက်အလုပ်လုပ်မည်။', 'success');
       navigate('/machines');
@@ -212,6 +214,51 @@ export function Buy() {
             placeholder="လွှဲငွေ reference အမှတ် စသည်"
             rows={2}
           />
+        </div>
+
+        <div className="field">
+          <label className="field__label">
+            Receipt Screenshot Upload <span className="text-mute text-sm">(optional)</span>
+          </label>
+          <label className="upload-box">
+            <input
+              type="file"
+              accept="image/*"
+              className="upload-box__input"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                setScreenshot(f);
+              }}
+            />
+            {screenshot ? (
+              <div className="upload-box__preview">
+                <img
+                  src={URL.createObjectURL(screenshot)}
+                  alt="receipt preview"
+                  className="upload-box__img"
+                />
+                <div className="upload-box__meta">
+                  <div className="text-sm fw-700">{screenshot.name}</div>
+                  <div className="text-dim text-sm">
+                    {(screenshot.size / 1024).toFixed(1)} KB
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm mt-4"
+                    onClick={() => setScreenshot(null)}
+                  >
+                    ✕ ဖယ်ရှားမည်
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="upload-box__placeholder">
+                <div className="upload-box__icon">📷</div>
+                <div className="upload-box__hint">လွှဲငွေ screenshot ရွေးပါ</div>
+                <div className="text-dim text-sm">JPG, PNG · max 5MB</div>
+              </div>
+            )}
+          </label>
         </div>
 
         <button className="btn btn--primary btn--block" type="submit" disabled={submitting}>

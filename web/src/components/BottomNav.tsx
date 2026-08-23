@@ -13,6 +13,7 @@ const baseItems: Item[] = [
   { to: '/', label: 'ပင်မ', icon: '🏠', end: true },
   { to: '/machines', label: 'စက်များ', icon: '⛏️' },
   { to: '/drop', label: 'Drop', icon: '💸' },
+  { to: '/history', label: 'မှတ်တမ်း', icon: '📜' },
   { to: '/refer', label: 'Refer', icon: '🔗' },
 ];
 
